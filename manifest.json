@@ -1,0 +1,13 @@
+{
+  "manifest_version": 2,
+
+  "name": "Giphy Madness",
+  "description": "Replace larger images with giphies based on their alt text",
+  "version": "1.0",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["giphyMe.js"]
+    }
+  ]
+}
