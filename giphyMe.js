@@ -22,17 +22,16 @@ function getImageUrl(searchTerm, callback, errorCallback) {
   x.onload = function() {
     // Parse and process the response from Giphy Image Search.
     var response = x.response;
+    console.log(response);
     if (!response || !response.data || !response.data[0]) {
       errorCallback('No response from Giphy Image search!');
       return;
     }
-    var firstResult = response.data[0];
-    console.log(firstResult);
-    // Take the thumbnail instead of the full image to get an approximately
-    // consistent image size.
-    var imageUrl = firstResult.images.original.url;
-    var width = parseInt(firstResult.images.original.width);
-    var height = parseInt(firstResult.images.original.height);
+    var result = response.data[0];
+    console.log(result);
+    var imageUrl = result.images.original.url;
+    var width = parseInt(result.images.original.width);
+    var height = parseInt(result.images.original.height);
     console.assert(
         typeof imageUrl == 'string' && !isNaN(width) && !isNaN(height),
         'Unexpected respose from the Giphy Image Search API!');
@@ -44,10 +43,42 @@ function getImageUrl(searchTerm, callback, errorCallback) {
   x.send();
 }
 
+function getRandomImage(callback, errorCallback) {
+  var searchUrl = 'https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC';
+
+  var x = new XMLHttpRequest();
+  x.open('GET', searchUrl);
+  // The Giphy image search API responds with JSON, so let Chrome parse it.
+  x.responseType = 'json';
+  x.onload = function() {
+    // Parse and process the response from Giphy Image Search.
+    var response = x.response;
+    console.log(response);
+    if (!response || !response.data) {
+      errorCallback('No response from Giphy Image search!');
+      return;
+    }
+    var result = response.data;
+    console.log(result);
+    // Take the thumbnail instead of the full image to get an approximately
+    // consistent image size.
+    var imageUrl = result.image_url;
+    var width = parseInt(result.image_width);
+    var height = parseInt(result.image_height);
+    console.assert(
+      typeof imageUrl == 'string' && !isNaN(width) && !isNaN(height),
+      'Unexpected respose from the Giphy Image Search API!');
+    callback(imageUrl);
+  };
+  x.onerror = function() {
+    errorCallback('error on search');
+  };
+  x.send();
+
+}
+
 (function() {
   var images = document.getElementsByTagName('img');
-  console.log("GPHY");
-  console.log(images);
 
   for (var i = 0; i < images.length; i++) {
     var image = images[i];
@@ -56,16 +87,32 @@ function getImageUrl(searchTerm, callback, errorCallback) {
     var searchTerm = image.alt;
 
     if (width > 100 && height > 100) {
-      getImageUrl(searchTerm,
-        function(image, imageUrl) {
-          console.log('GPHY: replacing image');
-          image.src = imageUrl;
-          image.currentSrc = imageUrl;
-        }.bind(null, image),
-        function(errorMessage) {
-          console.log('GPHY: ' + errorMessage);
-        }
-      );
+      if (searchTerm) {
+        console.log('GPHY: searching for ' + searchTerm);
+        getImageUrl(searchTerm,
+          function(image, imageUrl) {
+            console.log('GPHY: replacing image');
+            image.src = imageUrl;
+            image.currentSrc = imageUrl;
+          }.bind(null, image),
+          function(errorMessage) {
+            console.log('GPHY: ' + errorMessage);
+          }
+        );
+      } else {
+        console.log('GPHY: searching for random image');
+
+        getRandomImage(function(image, imageUrl) {
+            console.log('GPHY: replacing image');
+            image.src = imageUrl;
+            image.currentSrc = imageUrl;
+          }.bind(null, image),
+          function(errorMessage) {
+            console.log('GPHY: ' + errorMessage);
+          }
+        );
+
+      }
     }
   }
 })();
